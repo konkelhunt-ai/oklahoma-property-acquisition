@@ -11,7 +11,7 @@ from google.oauth2.service_account import Credentials
 
 SPREADSHEET_ID = "1vbgqFm_tygMJ545DbQU8vY_RaJr8IbSQG7_PMqmBNdQ"
 HEADERS = ["Lead ID", "County", "Auction Type", "Case Number", "Sale Date", "Location", "Status", "Plaintiff", "Attorney", "Source URL", "Last Checked"]
-COLLECTED = Path("output/creek_sheriff.json")
+COLLECTED = Path(os.environ.get("COLLECTED_JSON", "output/creek_sheriff.json"))
 
 def main():
     raw = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
