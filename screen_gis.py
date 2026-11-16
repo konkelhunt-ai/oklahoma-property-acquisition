@@ -40,7 +40,7 @@ def classify(match_status, location, legal, acres):
     if SPECIAL.search(legal) or re.search(r"\bCOMMON AREA\b", location, re.I):
         return ("SPECIAL-USE RISK", "Source suggests common or restricted-use land",
                 "Investigate dedication, restrictions, title and permitted uses")
-    if STRIP.search(legal):
+    # Narrow portions, road reservations, and long thin legal polygons require review.\n    if STRIP.search(legal) or re.search(r"\\bN2\\s+1/2FT\\b|\\bS\\d+(?:\\.\\d+)?FT\\s+E\\d+(?:\\.\\d+)?FT\\b", legal):
         return ("STRIP / ACCESS RISK", "Legal wording suggests a narrow strip or access restriction",
                 "Check plat, survey, width, road frontage, access rights and setbacks")
     if acreage is not None and acreage < 0.15:
