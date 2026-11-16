@@ -19,12 +19,15 @@ HEADERS = [
     "Assessor Owner", "Legal Description", "Suggested Initial Bid", "Screening Flag",
     "Reason", "Next Research Action", "GIS Source", "Treasurer Source", "Research Status",
 ]
-SPECIAL = re.compile(r"\b(COMMON AREAS?|DRAINAGE|DETENTION|RESERVE(?:D)?|RETENTION)\b", re.I)
+SPECIAL = re.compile(r"\\b(COMMON AREAS?|DRAINAGE|DETENTION|RESERVE(?:D)?|RETENTION|GREENBELT)\\b", re.I)
 STRIP = re.compile(
-    r"\b(EASEMENT|RIGHT OF WAY|R/W|ROW|STRIP|(?:\d+(?:\.\d+)?\s*FT\s*WIDE)|"
-    r"(?:WLY|ELY|NLY|SLY)\s+\d+(?:\.\d+)?\s*FT)\b",
+    r"\\b(EASEMENT|RIGHT OF WAY|R/W|RW/RD|ROW|STRIP|PUBLIC RW|"
+    r"(?:\\d+(?:\\.\\d+)?\\s*FT\\s*WIDE)|"
+    r"(?:WLY|ELY|NLY|SLY)\\s+\\d+(?:\\.\\d+)?\\s*FT)\\b",
     re.I,
 )
+ROAD = re.compile(r"PUBLIC\\s+(?:RW|ROAD)|\\bRW/RD\\b|\\bFOR PUBLIC\\b", re.I)
+THIN = re.compile(r"\\bN2\\s+1/2FT\\b|\\bS\\d+(?:\\.\\d+)?FT\\s+E\\d+(?:\\.\\d+)?FT\\b", re.I)
 
 def classify(match_status, location, legal, acres):
     """Return flag, reason, next step; a flag is never a final investment verdict."""
@@ -40,7 +43,8 @@ def classify(match_status, location, legal, acres):
     if SPECIAL.search(legal) or re.search(r"\bCOMMON AREA\b", location, re.I):
         return ("SPECIAL-USE RISK", "Source suggests common or restricted-use land",
                 "Investigate dedication, restrictions, title and permitted uses")
-    # Narrow portions, road reservations, and long thin legal polygons require review.\n    if STRIP.search(legal) or re.search(r"\\bN2\\s+1/2FT\\b|\\bS\\d+(?:\\.\\d+)?FT\\s+E\\d+(?:\\.\\d+)?FT\\b", legal):
+    # Flag road rights and narrow lot portions before acreage-based screening.
+    if STRIP.search(legal) or ROAD.search(legal) or THIN.search(legal):
         return ("STRIP / ACCESS RISK", "Legal wording suggests a narrow strip or access restriction",
                 "Check plat, survey, width, road frontage, access rights and setbacks")
     if acreage is not None and acreage < 0.15:
