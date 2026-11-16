@@ -33,6 +33,7 @@ def normalized_address(s):
     tokens=s.split()
     if not tokens:return ""
     tokens=[SHORT.get(t,t) for t in tokens]
+    tokens=[re.sub(r"^(\d+)(?:ST|ND|RD|TH)$",r"\1",t) for t in tokens]
     if tokens[0].isdigit():tokens[0]=str(int(tokens[0]))
     return " ".join(tokens)
 
@@ -50,15 +51,23 @@ def search_one(page,street,city,case):
             "source":PAGE,"status":"No exact match",
             "checked_at":datetime.now(timezone.utc).isoformat()}
     field=page.locator("#srch-parcel")
-    field.fill(street)
-    # Autocomplete is async and the first hit may be a DIFFERENT house number.
-    page.wait_for_timeout(1000)
-    labels=page.locator("ul.ui-autocomplete:visible li .ui-menu-item-wrapper")
-    suggestions=[]
-    for i in range(min(labels.count(),100)):
-        suggestions.append(labels.nth(i).inner_text().strip())
-    result["candidate_labels"]=suggestions[:30]
-    exact=[x for x in suggestions if normalized_address(x)==normalized_address(street)]
+    number=street.split()[0]
+    searches=[street,number,number.zfill(5)]
+    tried=[]
+    exact=[]
+    for search in dict.fromkeys(searches):
+        field.fill(search)
+        # A partial number may find a parcel whose indexed address differs from
+        # the sheriff's spelling. Never accept a different house number.
+        page.wait_for_timeout(900)
+        labels=page.locator("ul.ui-autocomplete:visible li .ui-menu-item-wrapper")
+        suggestions=[labels.nth(i).inner_text().strip()
+                     for i in range(min(labels.count(),100))]
+        tried.append({"query":search,"suggestions":suggestions[:40]})
+        exact=[x for x in suggestions if normalized_address(x)==normalized_address(street)]
+        if exact:break
+    result["tried"]=tried
+    result["candidate_labels"]=tried[-1]["suggestions"] if tried else []
     if len(exact)!=1:
         result["status"]="Ambiguous" if len(exact)>1 else "No exact address suggestion"
         field.fill("")
