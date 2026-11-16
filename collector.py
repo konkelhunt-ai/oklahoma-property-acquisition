@@ -14,26 +14,26 @@ FIELDS = ["lead_id", "county", "case_number", "status", "sale_date", "appraisal"
 
 
 def clean(value):
-    return re.sub(r"\\s+", " ", value or "").strip()
+    return re.sub(r"\s+", " ", value or "").strip()
 
 
 def extract(html, checked_at=None):
     soup = BeautifulSoup(html, "html.parser")
     # Preserve line boundaries in the official site's text.
-    lines = [clean(line) for line in soup.get_text("\\n").splitlines()]
+    lines = [clean(line) for line in soup.get_text("\n").splitlines()]
     lines = [line for line in lines if line]
-    starts = [i for i, line in enumerate(lines) if re.match(r"^Case#\\s+(?:CJ|CV)-\\d{2}-\\d+", line, re.I)]
+    starts = [i for i, line in enumerate(lines) if re.match(r"^Case#\s+(?:CJ|CV)-\d{2}-\d+", line, re.I)]
     starts.append(len(lines))
     out = []
     for i, j in zip(starts, starts[1:]):
         block = lines[i:j]
         if not block:
             continue
-        joined = "\\n".join(block)
+        joined = "\n".join(block)
         def value(label):
-            match = re.search(r"(?im)^" + re.escape(label) + r":?\\s*(.*)$", joined)
+            match = re.search(r"(?im)^" + re.escape(label) + r":?\s*(.*)$", joined)
             return clean(match.group(1)) if match else ""
-        case = re.search(r"^Case#\\s+([^\\s]+)", block[0], re.I)
+        case = re.search(r"^Case#\s+([^\s]+)", block[0], re.I)
         if not case:
             continue
         status = value("Status")
