@@ -1,0 +1,29 @@
+name: Enrich all parcels with county assessor GIS
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '10 16 * * 1-5'
+permissions:
+  contents: read
+jobs:
+  enrich:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Query official parcel GIS and stage exact matches
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: python enrich_gis.py
+      - name: Save parcel lookup diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gis-enrichment-${{ github.run_number }}
+          path: output/
+          retention-days: 30
+          if-no-files-found: warn
