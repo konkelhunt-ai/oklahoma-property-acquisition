@@ -20,7 +20,7 @@ HEADERS=[
  "Parcel Boundary / Road Access","Buildability / Zoning","Utilities / Flood",
  "Title / Liens","Market Comps / Value","Estimated Total Cost","Decision",
  "Assigned To","Last Verified","Research Notes","Automated Screening Flag",
- "Research Priority","Source Last Checked"
+ "Research Priority","Screening Synced At"
 ]
 COUNTY_PREFIX={"OKCOUNTY-":"Oklahoma"}
 def getrows(sheet):
