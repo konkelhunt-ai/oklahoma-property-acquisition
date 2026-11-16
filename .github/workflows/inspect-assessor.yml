@@ -1,0 +1,42 @@
+name: Inspect current Creek assessor owner search
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'probe_assessor_portal.py'
+      - '.github/workflows/inspect-assessor.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Test current Creek County owner search
+        run: python probe_assessor_portal.py
+      - name: Save assessor lookup diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creek-current-assessor-${{ github.run_number }}
+          path: output/assessor_*.txt
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Save detailed assessor search data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creek-current-assessor-details-${{ github.run_number }}
+          path: |
+            output/current_assessor_probe.json
+            output/assessor_*.html
+            output/assessor_*.png
+          retention-days: 7
+          if-no-files-found: warn
