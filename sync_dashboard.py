@@ -53,8 +53,14 @@ def main():
             address="No street address on file" if not location or location.upper().startswith("0 UNKNOWN") else location
         official=field(loc,lc,"Official Situs Address")
         if official: address=official
-        address_type=("Official situs" if official else field(loc,lc,"Location Type") or
-                      "Assessor location" if address!="No street address on file" else "Address unavailable")
+        if official:
+            address_type="Official situs"
+        elif field(loc,lc,"Location Type"):
+            address_type=field(loc,lc,"Location Type")
+        elif address!="No street address on file":
+            address_type="Assessor location"
+        else:
+            address_type="Address unavailable"
         flag=getg("Screening Flag") or "NOT SCREENED"
         if flag=="RESEARCH CANDIDATE": action="Research access, zoning & title"
         elif flag=="UNMATCHED": action="Confirm parcel ID"
