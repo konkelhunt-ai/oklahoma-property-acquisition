@@ -12,7 +12,7 @@ class WorkflowTests(unittest.TestCase):
         expressions=text_formula(2)
         self.assertEqual(len(expressions),5)
         self.assertIn("MATCH($L2",expressions[0])
-        self.assertIn("google.com",expressions[4]) if False else self.assertIn("voice.google.com",expressions[4])
+        self.assertIn("voice.google.com",expressions[4])
         self.assertNotIn("send",expressions[4].lower())
     def test_offer_math_requires_real_costs(self):
         self.assertIn("ISNUMBER(K2)",max_bid_formula(2))
