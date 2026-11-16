@@ -55,6 +55,7 @@ def search_one(page,street,city,case):
     searches=[street,number,number.zfill(5)]
     tried=[]
     exact=[]
+    address_variant=False
     for search in dict.fromkeys(searches):
         field.fill(search)
         # A partial number may find a parcel whose indexed address differs from
@@ -65,6 +66,14 @@ def search_one(page,street,city,case):
                      for i in range(min(labels.count(),100))]
         tried.append({"query":search,"suggestions":suggestions[:40]})
         exact=[x for x in suggestions if normalized_address(x)==normalized_address(street)]
+        if not exact and case=="CJ-23-352":
+            # Sheriff omits a final directional S; current property listings
+            # also show 3566 W 151ST ST S. Record as a VARIANT, not an exact match.
+            alternative=[x for x in suggestions
+                         if normalized_address(x)==normalized_address(street)+" S"]
+            if len(alternative)==1:
+                exact=alternative
+                address_variant=True
         if exact:break
     result["tried"]=tried
     result["candidate_labels"]=tried[-1]["suggestions"] if tried else []
@@ -89,13 +98,16 @@ def search_one(page,street,city,case):
         record["panel"]=t[:400]
         possibilities.append(record)
     result["record_options"]=possibilities
-    real=[r for r in possibilities if normalized_address(r["situs"])==normalized_address(street)
+    compare=normalized_address(street)+(" S" if address_variant else "")
+    real=[r for r in possibilities if normalized_address(r["situs"])==compare
           and r["account"] and r["assessor_owner"]]
     if len(real)!=1:
         result["status"]="Ambiguous parcel records" if len(real)>1 else "No exact parcel record"
     else:
         r=real[0]
-        result.update({"status":"Exact assessor situs match — deed unverified",
+        result.update({"status":("Near-exact situs: sheriff omits trailing S — confirm deed"
+                                               if address_variant else
+                                               "Exact assessor situs match — deed unverified"),
                        "assessor_owner":r["assessor_owner"],"assessor_account":r["account"],
                        "assessor_situs":r["situs"],
                        "assessor_details_url":PAGE.replace("/map/","/map/details.php?account="+r["account"])})
