@@ -26,10 +26,17 @@ def choose_rows(records,deals,today,checked):
         lead=r[15]
         old=indexed.get(lead,[])
         display_owner=r[2] or "Owner identity needs research"
-        if len(old)>3 and old[3]=="Owner verified" and old[2]:
-            display_owner=old[2]
-            ownership="Deed verified — review source"
-        else:
+        if len(old)>3 and old[2]:
+            if old[3]=="Owner verified":
+                display_owner=old[2]
+                ownership="Deed verified — review source"
+            elif old[3]=="Assessor match — deed pending":
+                display_owner=old[2]
+                ownership="County assessor match — deed not verified"
+            elif old[3]=="Estate / deceased — deed pending":
+                display_owner=old[2]
+                ownership="Assessor name — estate/deed unresolved"
+        if "ownership" not in locals():
             ownership=("Court defendant — NOT deed verified"
                        if display_owner!="Owner identity needs research"
                        else "Owner identity needs research")
@@ -38,6 +45,7 @@ def choose_rows(records,deals,today,checked):
         result.append([r[0],r[1],display_owner,ownership,r[4],r[5],
                       r[6],"Active — confirm before bid",r[10],
                       next_action,r[12],checked])
+        del ownership
     return sorted(result,key=lambda x:(x[4],x[1],x[0]))
 
 def main():
