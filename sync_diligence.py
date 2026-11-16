@@ -44,6 +44,8 @@ def main():
     dest=book.worksheet(TAB)
     previous_header,previous=getrows(dest)
     if previous_header[:20]!=HEADERS[:20]: raise RuntimeError("Due Diligence Tracker header mismatch")
+    if dest.col_count<len(HEADERS):
+        dest.add_cols(len(HEADERS)-dest.col_count)
     if len(previous_header)<len(HEADERS):
         dest.update(range_name="U1:W1",values=[HEADERS[20:]])
     prior={r[0]:(i+2,r) for i,r in enumerate(previous) if r and r[0]}
