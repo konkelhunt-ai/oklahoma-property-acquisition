@@ -15,7 +15,7 @@ SHEET_ID="1vbgqFm_tygMJ545DbQU8vY_RaJr8IbSQG7_PMqmBNdQ"
 TAB="01 Leads - Verify Owner"
 SOURCE="https://www.creekcountysheriff.gov/sheriff-sales"
 INPUT=Path("output/creek_sheriff.json")
-HEADERS=["Street Address","City","Owner of Record","Court-Named Defendant (NOT Owner Verification)",
+HEADERS=["Street Address","City","Owner Name (See Verification)","Court-Named Defendant (NOT Owner Verification)",
          "Auction Date","Minimum Bid","Appraisal","Sheriff Status","Owner Verification",
          "Next Action","Case Number","County","Source","Updated","Notes","Lead ID"]
 CITIES=["Sapulpa","Bristow","Kellyville","Kiefer","Mannford","Drumright","Oilton",
@@ -36,6 +36,16 @@ def iso_date(value):
         try:return datetime.strptime(value.strip(),fmt).date()
         except (ValueError,AttributeError): pass
     return None
+def likely_owner(defendant):
+    """Court-party lead, not a representation of current deed ownership."""
+    name=re.sub(r"\s+"," ",str(defendant or "")).strip()
+    if not name or re.search(r"^(?:See Details|Unknown\s+(?:Successors|Heirs)|Estate of|Unknown Owners)",name,re.I):
+        return "Owner identity needs research"
+    # Discard et al from display; keep the complete text in defendant column.
+    name=re.split(r"\s*;\s*et al|\s*,\s*et al|\s+et al\b",name,flags=re.I)[0]
+    name=re.sub(r"\s*\*.*$","",name).strip(" ;,")
+    return name or "Owner identity needs research"
+
 def rows_from_records(records,today):
     updates=[]
     for rec in records:
@@ -48,7 +58,7 @@ def rows_from_records(records,today):
         # New opportunities must have an upcoming date and be marked Active.
         if status.lower()!="active" or day<=today: continue
         lead=key(rec["case_number"],address)
-        updates.append([address,city,"NOT YET VERIFIED",rec.get("defendant",""),
+        updates.append([address,city,likely_owner(rec.get("defendant","")),rec.get("defendant",""),
                         day.isoformat(),rec.get("minimum_bid",""),rec.get("appraisal",""),
                         "Active — check for recalls","Needs assessor/deed verification",
                         "Verify assessor owner and recorded deed before contacting anyone",
@@ -80,6 +90,9 @@ def main():
         k=row[15]
         if k in bykey:
             n,old=bykey[k]
+            # Replace placeholders with court-named leads; preserve manually verified names.
+            if (len(old)<=8 or old[8]!="Verified — source in notes") and (len(old)<=2 or old[2] in ("","NOT YET VERIFIED","Owner identity needs research")) and row[2]!="Owner identity needs research":
+                updates.append({"range":f"'{TAB}'!C{n}","values":[[row[2]]]})
             # Preserve owner (C), human verification (I), and notes (O).
             # Never change the owner of record just because an auction lists a defendant.
             if (old+[""]*16)[:2]!=row[:2]:
