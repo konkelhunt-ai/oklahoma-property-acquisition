@@ -70,7 +70,7 @@ def main():
                     raise RuntimeError(f"Official source returned HTTP {response.status if response else 'no response'}")
                 # The sheriff sale list is populated after page navigation.
                 try:
-                    page.get_by_text(re.compile(r"(?:CJ|CV)-\\d{2,4}-\\d+")).first.wait_for(timeout=25000)
+                    page.get_by_text(re.compile(r"(?:CJ|CV)-\d{2,4}-\d+")).first.wait_for(timeout=25000)
                 except Exception:
                     page.wait_for_timeout(5000)
                 texts = [page.locator("body").inner_text(timeout=10000)]
@@ -80,7 +80,7 @@ def main():
                             texts.append(frame.locator("body").inner_text(timeout=5000))
                         except Exception:
                             pass
-                rendered = "\\n".join(texts)
+                rendered = "\n".join(texts)
                 html = page.content()
                 (folder / f"source_attempt_{attempt}.txt").write_text(rendered, encoding="utf-8")
                 (folder / f"source_attempt_{attempt}.html").write_text(html, encoding="utf-8")
