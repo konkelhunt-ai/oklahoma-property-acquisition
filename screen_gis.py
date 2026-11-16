@@ -19,15 +19,15 @@ HEADERS = [
     "Assessor Owner", "Legal Description", "Suggested Initial Bid", "Screening Flag",
     "Reason", "Next Research Action", "GIS Source", "Treasurer Source", "Research Status",
 ]
-SPECIAL = re.compile(r"\\b(COMMON AREAS?|DRAINAGE|DETENTION|RESERVE(?:D)?|RETENTION|GREENBELT)\\b", re.I)
+SPECIAL = re.compile(r"\b(COMMON AREAS?|DRAINAGE|DETENTION|RESERVE(?:D)?|RETENTION|GREENBELT)\b", re.I)
 STRIP = re.compile(
-    r"\\b(EASEMENT|RIGHT OF WAY|R/W|RW/RD|ROW|STRIP|PUBLIC RW|"
-    r"(?:\\d+(?:\\.\\d+)?\\s*FT\\s*WIDE)|"
-    r"(?:WLY|ELY|NLY|SLY)\\s+\\d+(?:\\.\\d+)?\\s*FT)\\b",
+    r"\b(EASEMENT|RIGHT OF WAY|R/W|RW/RD|ROW|STRIP|PUBLIC RW|"
+    r"(?:\d+(?:\.\d+)?\s*FT\s*WIDE)|"
+    r"(?:WLY|ELY|NLY|SLY)\s+\d+(?:\.\d+)?\s*FT)\b",
     re.I,
 )
-ROAD = re.compile(r"PUBLIC\\s+(?:RW|ROAD)|\\bRW/RD\\b|\\bFOR PUBLIC\\b", re.I)
-THIN = re.compile(r"\\bN2\\s+1/2FT\\b|\\bS\\d+(?:\\.\\d+)?FT\\s+E\\d+(?:\\.\\d+)?FT\\b", re.I)
+ROAD = re.compile(r"PUBLIC\s+(?:RW|ROAD)|\bRW/RD\b|\bFOR PUBLIC\b", re.I)
+THIN = re.compile(r"\bN2\s+1/2FT\b|\bS\d+(?:\.\d+)?FT\s+E\d+(?:\.\d+)?FT\b", re.I)
 
 def classify(match_status, location, legal, acres):
     """Return flag, reason, next step; a flag is never a final investment verdict."""
