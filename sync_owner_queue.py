@@ -72,10 +72,8 @@ def main():
     if not records: raise RuntimeError("Official extract has no records, refusing to change sheet")
     today=datetime.now(timezone.utc).date()
     staged=rows_from_records(records,today)
-    if not staged:
-        # Normal when no active upcoming sales, but avoid destroying old records.
-        print("No new qualifying future sheriff listings; existing lead queue preserved")
-        return
+    # Even with no upcoming sales, reconcile any existing lead against the
+    # *successfully collected* current sheriff listing to remove stale activity.
     secret=os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
     if not secret: raise RuntimeError("Missing GOOGLE_SERVICE_ACCOUNT_JSON")
     creds=Credentials.from_service_account_info(json.loads(secret),
@@ -109,9 +107,20 @@ def main():
         if parsed:
             statuses[key(rec.get("case_number",""),parsed[0])]=rec.get("status","")
     for k,(n,old) in bykey.items():
-        status=str(statuses.get(k,"")).lower()
+        status=str(statuses.get(k,"")).strip().lower()
         if status in ("recalled","inactive","sold"):
-            updates.append({"range":f"'{TAB}'!H{n}","values":[[status.title()+" — do not bid"]]})
+            value=status.title()+" — not active"
+        elif k not in statuses:
+            value="Not on latest sheriff list — verify"
+        elif status=="active":
+            # A previously listed active sale can be past-dated without a
+            # new active candidate. Do not keep it marked ready to bid.
+            value="Active" if k in {r[15] for r in staged} else "Past/invalid sale date — verify"
+        else:
+            value="Status uncertain — verify official sheriff list"
+        current=old[7] if len(old)>7 else ""
+        if current!=value and (k not in {r[15] for r in staged} or value!="Active"):
+            updates.append({"range":f"'{TAB}'!H{n}","values":[[value]]})
     for i in range(0,len(updates),100):
         book.values_batch_update({"valueInputOption":"RAW","data":updates[i:i+100]})
     if inserts:sheet.append_rows(inserts,value_input_option="RAW",table_range="A:P")
