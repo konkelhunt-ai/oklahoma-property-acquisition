@@ -46,7 +46,7 @@ def main():
     records=json.loads(latest.read_text(encoding="utf-8"))
     if not records:raise RuntimeError("Official collector returned no records, refusing to clear current view")
     now=datetime.now(ZoneInfo("America/Chicago"))
-    checked=now.strftime("%Y-%m-%d %I:%M %p CST/CDT")
+    checked=now.strftime("%Y-%m-%d %I:%M %p %Z")
     token=os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
     if not token:raise RuntimeError("Missing Google Sheets authorization secret")
     credentials=Credentials.from_service_account_info(json.loads(token),
