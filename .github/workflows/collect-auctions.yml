@@ -7,6 +7,8 @@ on:
       - 'collector.py'
       - 'sync_owner_queue.py'
       - 'test_owner_queue.py'
+      - 'sync_investor_workflow.py'
+      - 'test_investor_workflow.py'
       - '.github/workflows/collect-auctions.yml'
   schedule:
     - cron: '17 13 * * *'
@@ -23,7 +25,7 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - name: Test lead identification safeguards
-        run: python -m unittest -v test_owner_queue.py
+        run: python -m unittest -v test_owner_queue.py test_investor_workflow.py
       - run: python -m playwright install --with-deps chromium
       - run: python collector.py
       - name: Sync to Google Sheets if configured
@@ -33,6 +35,7 @@ jobs:
           if [ -n "$GOOGLE_SERVICE_ACCOUNT_JSON" ]; then
             python sync_sheets.py
             python sync_owner_queue.py
+            python sync_investor_workflow.py
           else
             echo "Google Sheets sync not configured yet; collector artifact remains available."
           fi
