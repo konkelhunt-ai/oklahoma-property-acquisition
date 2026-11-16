@@ -27,7 +27,12 @@ STRIP = re.compile(
     re.I,
 )
 ROAD = re.compile(r"PUBLIC\s+(?:RW|ROAD)|\bRW/RD\b|\bFOR PUBLIC\b", re.I)
-THIN = re.compile(r"\bN2\s+1/2FT\b|\bS\d+(?:\.\d+)?FT\s+E\d+(?:\.\d+)?FT\b", re.I)
+THIN = re.compile(
+    r"\\bN2\\s+1/2FT\\b|\\bS\\d+(?:\\.\\d+)?FT\\s+E\\d+(?:\\.\\d+)?FT\\b|"
+    r"\\b[NSWE]\\s?(?:[1-3]?\\d(?:\\.\\d+)?)\\s?FT\\s+OF\\b|"
+    r"\\b(?:N|S|E|W)25FT\\b",
+    re.I,
+)
 
 def classify(match_status, location, legal, acres):
     """Return flag, reason, next step; a flag is never a final investment verdict."""
