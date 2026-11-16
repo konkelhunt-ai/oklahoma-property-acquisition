@@ -22,7 +22,7 @@ CITIES=["Sapulpa","Bristow","Kellyville","Kiefer","Mannford","Drumright","Oilton
         "Depew","Mounds","Slick","Shamrock","Jenks","Tulsa","Sand Springs"]
 def parse_address(raw):
     value=re.sub(r"\s+"," ",str(raw or "")).strip()
-    if not re.match(r"^\d{1,6}\s+[^,]+",value): return None
+    if not re.match(r"^[1-9]\d{0,5}\s+[^,]+",value) or re.search(r"\bUNKNOWN\b",value,re.I): return None
     for city in sorted(CITIES,key=len,reverse=True):
         m=re.search(r"(?:,\s*|\s+)"+re.escape(city)+r"(?:,\s*OK(?:\s+\d{5})?)?$",value,re.I)
         if m: return value[:m.start()].strip(" ,"),city
