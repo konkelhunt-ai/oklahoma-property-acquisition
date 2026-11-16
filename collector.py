@@ -56,29 +56,49 @@ def extract(html, checked_at=None):
 
 
 def main():
+    folder = Path("output")
+    folder.mkdir(exist_ok=True)
+    records = []
+    errors = []
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        response = page.goto(SOURCE, wait_until="domcontentloaded", timeout=60000)
-        if response is None or response.status >= 400:
-            raise RuntimeError("Official site did not load")
-        page.wait_for_timeout(10000)
-        texts = [page.locator("body").inner_text()]
-        for frame in page.frames:
-            if frame != page.main_frame:
+        for attempt in range(1, 4):
+            page = browser.new_page()
+            try:
+                response = page.goto(SOURCE, wait_until="domcontentloaded", timeout=60000)
+                if response is None or response.status >= 400:
+                    raise RuntimeError(f"Official source returned HTTP {response.status if response else 'no response'}")
+                # The sheriff sale list is populated after page navigation.
                 try:
-                    texts.append(frame.locator("body").inner_text(timeout=4000))
+                    page.get_by_text(re.compile(r"(?:CJ|CV)-\\d{2,4}-\\d+")).first.wait_for(timeout=25000)
                 except Exception:
-                    pass
-        rendered = "\n".join(texts)
-        folder = Path("output")
-        folder.mkdir(exist_ok=True)
-        (folder / "source_rendered.txt").write_text(rendered, encoding="utf-8")
-        (folder / "source_rendered.html").write_text(page.content(), encoding="utf-8")
+                    page.wait_for_timeout(5000)
+                texts = [page.locator("body").inner_text(timeout=10000)]
+                for frame in page.frames:
+                    if frame != page.main_frame:
+                        try:
+                            texts.append(frame.locator("body").inner_text(timeout=5000))
+                        except Exception:
+                            pass
+                rendered = "\\n".join(texts)
+                html = page.content()
+                (folder / f"source_attempt_{attempt}.txt").write_text(rendered, encoding="utf-8")
+                (folder / f"source_attempt_{attempt}.html").write_text(html, encoding="utf-8")
+                records = extract(rendered)
+                if not records:
+                    records = extract(html)
+                if records:
+                    print(f"Official auction records parsed on attempt {attempt}.")
+                    break
+                errors.append(f"Attempt {attempt}: no recognizable case records")
+            except Exception as exc:
+                errors.append(f"Attempt {attempt}: {type(exc).__name__}: {exc}")
+            finally:
+                page.close()
         browser.close()
-    records = extract(rendered)
     if not records:
-        raise RuntimeError("No sale records parsed: source layout may have changed. No empty overwrite.")
+        print(" | ".join(errors))
+        raise RuntimeError("No official sale records after three attempts. Diagnostics saved; no empty spreadsheet overwrite.")
     folder = Path("output")
     folder.mkdir(exist_ok=True)
     (folder / "creek_sheriff.json").write_text(json.dumps(records, indent=2), encoding="utf-8")
