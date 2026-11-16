@@ -33,10 +33,13 @@ def collect():
         if parcel in seen:
             continue
         seen.add(parcel)
-        rows.append({"lead_id": "OKCOUNTY-COUNTYOWNED-" + parcel, "county": "Oklahoma",
+        if len(cells) < 7 or cells[3] != "N/A":
+            continue  # Only unscheduled parcels in this source; never invent auction dates.
+        rows.append({"scheduled_sale": cells[3], "initial_bid": cells[4], "suggested_initial_bid": cells[5],
+                     "property_description": cells[6], "lead_id": "OKCOUNTY-COUNTYOWNED-" + parcel, "county": "Oklahoma",
                      "auction_type": "County-owned property (commissioners sale)",
                      "case_number": parcel, "sale_date": "",
-                     "address": next((x for x in cells if "UNKNOWN" in x.upper()), ""),
+                     "address": cells[6],
                      "status": "County-owned list; availability unverified",
                      "plaintiff": "", "source_url": SOURCE,
                      "checked_at": datetime.now(timezone.utc).isoformat(),
