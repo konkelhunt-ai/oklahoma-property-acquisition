@@ -9,6 +9,7 @@ on:
       - 'test_owner_queue.py'
       - 'sync_investor_workflow.py'
       - 'test_investor_workflow.py'
+      - 'probe_creek_gis.py'
       - '.github/workflows/collect-auctions.yml'
   schedule:
     - cron: '17 13 * * *'
@@ -26,6 +27,9 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Test lead identification safeguards
         run: python -m unittest -v test_owner_queue.py test_investor_workflow.py
+      - name: Probe county parcel ownership fields (historical GIS only)
+        continue-on-error: true
+        run: python probe_creek_gis.py
       - run: python -m playwright install --with-deps chromium
       - run: python collector.py
       - name: Sync to Google Sheets if configured
