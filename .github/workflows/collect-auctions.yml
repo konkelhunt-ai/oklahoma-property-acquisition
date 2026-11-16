@@ -1,6 +1,13 @@
 name: Collect official Oklahoma auction records
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'collector.py'
+      - 'sync_owner_queue.py'
+      - 'test_owner_queue.py'
+      - '.github/workflows/collect-auctions.yml'
   schedule:
     - cron: '17 13 * * *'
 permissions:
@@ -8,13 +15,15 @@ permissions:
 jobs:
   collect:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
+      - name: Test lead identification safeguards
+        run: python -m unittest -v test_owner_queue.py
       - run: python -m playwright install --with-deps chromium
       - run: python collector.py
       - name: Sync to Google Sheets if configured
@@ -23,6 +32,7 @@ jobs:
         run: |
           if [ -n "$GOOGLE_SERVICE_ACCOUNT_JSON" ]; then
             python sync_sheets.py
+            python sync_owner_queue.py
           else
             echo "Google Sheets sync not configured yet; collector artifact remains available."
           fi
