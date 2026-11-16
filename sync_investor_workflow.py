@@ -109,7 +109,7 @@ def upsert(book):
                 changes.append({"range":f"'{DEALS_TAB}'!L{n}:N{n}","values":[fresh[11:14]]})
             # Preserve manually checked ownership. Court updates can replace
             # only a court-derived value; never a deed-confirmed name.
-            if prior[3] not in ("Owner verified","Incorrect match") and prior[2:4]!=fresh[2:4]:
+            if prior[3] not in ("Owner verified","Incorrect match","Assessor match — deed pending","Estate / deceased — deed pending") and prior[2:4]!=fresh[2:4]:
                 changes.append({"range":f"'{DEALS_TAB}'!C{n}:D{n}","values":[fresh[2:4]]})
         else:
             deal_ins.append(fresh)
