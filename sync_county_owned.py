@@ -42,6 +42,31 @@ def main():
         book.values_batch_update({"valueInputOption": "RAW", "data": updates})
     if inserts:
         sheet.append_rows(inserts, value_input_option="RAW", table_range="A:K")
+    # Mirror new leads into the existing Properties pipeline, without changing
+    # existing deal stages, assignments, contact research, or other human edits.
+    master = book.worksheet("Properties")
+    master_values = master.get_all_values()
+    required = ["Lead ID", "County", "Parcel ID", "Property Type", "Source Type", "Source URL", "Auction Status", "Minimum Bid", "Last Verified", "Notes"]
+    headers = master_values[0] if master_values else []
+    if any(h not in headers for h in required):
+        raise RuntimeError("Properties header changed; county-owned source synced, master mirror blocked")
+    master_ids = {r[0] for r in master_values[1:] if r}
+    new_master = []
+    for r in records:
+        if r["lead_id"] in master_ids:
+            continue
+        values = {
+            "Lead ID": r["lead_id"], "County": r["county"],
+            "Parcel ID": r["case_number"], "Property Type": "Unverified",
+            "Source Type": "County-owned / tax resale", "Source URL": r["source_url"],
+            "Auction Status": "County-owned list; availability unverified",
+            "Minimum Bid": r["suggested_initial_bid"], "Last Verified": r["checked_at"],
+            "Notes": "Property description: " + r["property_description"] + ". Verify title, availability, and bidding process before outreach."
+        }
+        new_master.append([values.get(h, "") for h in headers])
+    if new_master:
+        master.append_rows(new_master, value_input_option="RAW", table_range="A:U")
+    print(f"Mirrored {len(new_master)} new county-owned leads into Properties; existing rows untouched.")
     print(f"County-owned leads: {len(inserts)} new, {len(updates)} updated. Research Notes preserved.")
 
 if __name__ == "__main__":
