@@ -15,10 +15,13 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
       - run: python collector.py
       - name: Save dated public-record snapshot
+        if: always()
         uses: actions/upload-artifact@v4
         with:
+          if-no-files-found: warn
           name: creek-auctions-${{ github.run_number }}
           path: output/
           retention-days: 30
