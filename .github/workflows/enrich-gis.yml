@@ -1,6 +1,15 @@
 name: Enrich all parcels with county assessor GIS
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "locate_parcels.py"
+      - "sync_dashboard.py"
+      - "enrich_gis.py"
+      - "screen_gis.py"
+      - "sync_diligence.py"
+      - ".github/workflows/enrich-gis.yml"
   schedule:
     - cron: '10 16 * * 1-5'
 permissions:
