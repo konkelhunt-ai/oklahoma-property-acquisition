@@ -1,0 +1,26 @@
+name: Inspect official Tulsa sheriff report
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '35 14 * * 1-5'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Download and validate official Tulsa auction report
+        run: python collect_tulsa.py
+      - name: Preserve source report and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tulsa-report-${{ github.run_number }}
+          path: output/
+          if-no-files-found: warn
+          retention-days: 30
