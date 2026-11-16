@@ -19,6 +19,10 @@ jobs:
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: python enrich_gis.py
+      - name: Refresh screening flags and preserve analyst review
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: python screen_gis.py
       - name: Save parcel lookup diagnostics
         if: always()
         uses: actions/upload-artifact@v4
