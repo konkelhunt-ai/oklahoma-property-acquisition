@@ -24,7 +24,12 @@ def candidates(session,address):
     number=re.match(r"^\d+",address).group()
     # Broad by street number. Verify the street token in the result in the next
     # stage before linking a historical parcel to a present auction address.
-    where=f"situs LIKE '%{number}%'"
+    road_terms={"23569":"102ND","801":"MAIN","17398":"246TH","6125":"HILTON",
+                "805":"PERSHING","3566":"151ST","304":"MAPLE","778":"MOCCASIN",
+                "3636":"HILLSIDE"}
+    road=road_terms.get(number)
+    where=(f"(situs LIKE '%{number}%' AND situs LIKE '%{road}%') OR "
+           f"(JOIN_ADDR LIKE '%{number}%' AND JOIN_ADDR LIKE '%{road}%')")
     data=request(session,BASE+"/query",{"f":"json","where":where,
          "outFields":",".join(KEYS),"returnGeometry":"false",
          "resultRecordCount":100})
@@ -50,7 +55,7 @@ def main():
             # Protect against false street-number hits. Data is for manual review,
             # not a claimed exact match.
             r["candidates"]=[{k:v for k,v in (c.get("attributes") or {}).items() if k in KEYS}
-                  for c in all_candidates[:15]]
+                  for c in all_candidates[:50]]
         except Exception as exc:
             r["error"]=type(exc).__name__+": "+str(exc)[:250]
         result["records"].append(r)
