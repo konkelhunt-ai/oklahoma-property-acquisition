@@ -17,6 +17,10 @@ class ScreeningTests(unittest.TestCase):
         self.assertEqual(classify("Exact parcel match", "", "PT SEC 34 FOR PUBLIC RW/RD", "0.27")[0], "STRIP / ACCESS RISK")
     def test_narrow_north_portion(self):
         self.assertEqual(classify("Exact parcel match", "", "N2 1/2FT OF LOTS 44 THRU 48", "0.198")[0], "STRIP / ACCESS RISK")
+    def test_south_thirty_foot_strip(self):
+        self.assertEqual(classify("Exact parcel match", "", "S30FT OF SW4 OF NW4", "0.9091")[0], "STRIP / ACCESS RISK")
+    def test_north_twenty_five_foot_segment(self):
+        self.assertEqual(classify("Exact parcel match", "", "E285FT N25FT W285FT S25FT", "0.16")[0], "STRIP / ACCESS RISK")
     def test_candidate_requires_review(self):
         self.assertEqual(classify("Exact parcel match", "100 MAIN ST", "LOT 12", "0.25")[0], "RESEARCH CANDIDATE")
 
