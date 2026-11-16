@@ -60,7 +60,7 @@ def text_formula(lead_row):
         f'=IFERROR(INDEX(\'01 DEALS\'!A$2:A$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")',
         f'=IFERROR(INDEX(\'01 DEALS\'!C$2:C$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")',
         f'=IFERROR(INDEX(\'01 DEALS\'!I$2:I$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")',
-        f'=IF(OR(B{lead_row}="",REGEXMATCH(LOWER(B{lead_row}),"unknown|needs research|not yet verified|unclear")), "", "Hi "&REGEXEXTRACT(B{lead_row},"^[^ ]+")&", I\'m Xavier. I\'m interested in the property at "&A{lead_row}&" in "&IFERROR(INDEX(\'01 DEALS\'!B$2:B$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")&" and wanted to ask whether you would consider a direct sale. No pressure; if you\'re not interested, just let me know and I won\'t follow up.")',
+        f'=IF(OR(B{lead_row}="",REGEXMATCH(LOWER(B{lead_row}),"unknown|needs research|not yet verified|unclear"),REGEXMATCH(LOWER(IFERROR(INDEX(\'01 DEALS\'!D$2:D$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")),"estate|deceased|incorrect|do not contact|mismatch|variant")), "", "Hi "&REGEXEXTRACT(B{lead_row},"^[^ ]+")&", I\'m Xavier. I\'m interested in the property at "&A{lead_row}&" in "&IFERROR(INDEX(\'01 DEALS\'!B$2:B$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")&" and wanted to ask whether you would consider a direct sale. No pressure; if you\'re not interested, just let me know and I won\'t follow up.")',
         '=HYPERLINK("https://voice.google.com/u/0/messages","Open Google Voice")',
     ]
 
