@@ -8,6 +8,7 @@ on:
       - 'lookup_creek_current.py'
       - 'probe_creek_unresolved.py'
       - 'probe_creek_parcel_fallback.py'
+      - 'probe_creek_taxroll.py'
       - '.github/workflows/inspect-assessor.yml'
 permissions:
   contents: read
@@ -30,6 +31,8 @@ jobs:
         run: python probe_creek_unresolved.py
       - name: Lookup unmatched Hilton Road using reported parcel number
         run: python probe_creek_parcel_fallback.py
+      - name: Probe Creek current tax roll by reported parcel ID
+        run: python probe_creek_taxroll.py
       - name: Save assessor lookup diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -48,6 +51,7 @@ jobs:
             output/current_creek_assessor_matches.json
             output/unresolved_sheriff_addresses.json
             output/creek_parcel_fallback.json
+            output/creek_taxroll_parcel_probe.json
             output/assessor_*.html
             output/assessor_*.png
           retention-days: 7
