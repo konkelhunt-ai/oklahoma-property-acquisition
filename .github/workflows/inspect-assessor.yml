@@ -9,6 +9,7 @@ on:
       - 'probe_creek_unresolved.py'
       - 'probe_creek_parcel_fallback.py'
       - 'probe_creek_taxroll.py'
+      - 'probe_creek_court.py'
       - '.github/workflows/inspect-assessor.yml'
 permissions:
   contents: read
@@ -33,6 +34,8 @@ jobs:
         run: python probe_creek_parcel_fallback.py
       - name: Probe Creek current tax roll by reported parcel ID
         run: python probe_creek_taxroll.py
+      - name: Probe official OSCN court cases for unresolved addresses
+        run: python probe_creek_court.py
       - name: Save assessor lookup diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -52,6 +55,7 @@ jobs:
             output/unresolved_sheriff_addresses.json
             output/creek_parcel_fallback.json
             output/creek_taxroll_parcel_probe.json
+            output/creek_oscn_cases.json
             output/assessor_*.html
             output/assessor_*.png
           retention-days: 7
