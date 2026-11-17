@@ -60,7 +60,7 @@ def text_formula(lead_row):
         f'=IFERROR(INDEX(\'01 DEALS\'!A$2:A$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")',
         f'=IFERROR(INDEX(\'01 DEALS\'!C$2:C$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")',
         f'=IFERROR(INDEX(\'01 DEALS\'!I$2:I$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")',
-        f'=IF(OR(B{lead_row}="",REGEXMATCH(LOWER(B{lead_row}),"unknown|needs research|not yet verified|unclear"),REGEXMATCH(LOWER(IFERROR(INDEX(\'01 DEALS\'!D$2:D$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")),"estate|deceased|incorrect|do not contact|mismatch|variant")), "", "Hi "&REGEXEXTRACT(B{lead_row},"^[^ ]+")&", I\'m Xavier. I\'m interested in the property at "&A{lead_row}&" in "&IFERROR(INDEX(\'01 DEALS\'!B$2:B$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")&" and wanted to ask whether you would consider a direct sale. No pressure; if you\'re not interested, just let me know and I won\'t follow up.")',
+        f'=IF(OR(B{lead_row}="",REGEXMATCH(LOWER(B{lead_row}),"unknown|needs research|not yet verified|unclear"),REGEXMATCH(LOWER(IFERROR(INDEX(\'01 DEALS\'!D$2:D$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")),"estate|deceased|incorrect|do not contact|mismatch|variant|address discrepancy")), "", "Hi "&REGEXEXTRACT(B{lead_row},"^[^ ]+")&", I\'m Xavier. I\'m interested in the property at "&A{lead_row}&" in "&IFERROR(INDEX(\'01 DEALS\'!B$2:B$400,MATCH($L{lead_row},\'01 DEALS\'!N$2:N$400,0)),"")&" and wanted to ask whether you would consider a direct sale. No pressure; if you\'re not interested, just let me know and I won\'t follow up.")',
         '=HYPERLINK("https://voice.google.com/u/0/messages","Open Google Voice")',
     ]
 
@@ -109,7 +109,7 @@ def upsert(book):
                 changes.append({"range":f"'{DEALS_TAB}'!L{n}:N{n}","values":[fresh[11:14]]})
             # Preserve manually checked ownership. Court updates can replace
             # only a court-derived value; never a deed-confirmed name.
-            if prior[3] not in ("Owner verified","Incorrect match","Assessor match — deed pending","Estate / deceased — deed pending","Assessor/defendant mismatch — deed pending","Assessor address variant — deed pending") and prior[2:4]!=fresh[2:4]:
+            if prior[3] not in ("Owner verified","Incorrect match","Assessor match — deed pending","Estate / deceased — deed pending","Assessor/defendant mismatch — deed pending","Assessor address variant — deed pending","Sheriff address discrepancy — research") and prior[2:4]!=fresh[2:4]:
                 changes.append({"range":f"'{DEALS_TAB}'!C{n}:D{n}","values":[fresh[2:4]]})
         else:
             deal_ins.append(fresh)
