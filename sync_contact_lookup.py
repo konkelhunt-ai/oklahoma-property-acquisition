@@ -9,8 +9,8 @@ from google.oauth2.service_account import Credentials
 
 SHEET_ID="1vbgqFm_tygMJ545DbQU8vY_RaJr8IbSQG7_PMqmBNdQ"
 TAB="04 CONTACT RESEARCH"
-HEADERS=["Property Address","City","Potential Owner","Owner Evidence","Search by Name",
-         "Search by Address","Matched Person","Possible Phone","Identity Check",
+HEADERS=["Property Address","City","Potential Owner","Owner Evidence","FastPeopleSearch - Name",
+         "FastPeopleSearch - Address","Matched Person","Possible Phone","Identity Check",
          "Contact Review","Source Profile URL","Last Checked","Research Notes",
          "Lead ID","Review Gate"]
 DEAL_HEADERS=["Address","City","Likely Owner","Owner Status","Sale Date","Minimum Bid",
