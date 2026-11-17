@@ -6,6 +6,7 @@ import json, os
 from pathlib import Path
 import gspread
 from google.oauth2.service_account import Credentials
+from gspread.utils import ValueRenderOption
 
 SHEET_ID="1vbgqFm_tygMJ545DbQU8vY_RaJr8IbSQG7_PMqmBNdQ"
 TAB="04 CONTACT RESEARCH"
@@ -28,6 +29,25 @@ def review_gate(row):
             f'LEN(REGEXREPLACE(TO_TEXT(H{row}),"[^0-9]",""))<10,'
             f'LEN(REGEXREPLACE(TO_TEXT(H{row}),"[^0-9]",""))>11),'
             f'"HOLD","READY FOR MANUAL REVIEW")')
+
+def deal_phone_formula(row):
+    lookup = f"MATCH(N{row},'{TAB}'!N$2:N,0)"
+    gate = f"INDEX('{TAB}'!O$2:O,{lookup})"
+    phone = f"INDEX('{TAB}'!H$2:H,{lookup})"
+    return f'=IFERROR(IF({gate}="READY FOR MANUAL REVIEW",{phone},""),"")'
+
+
+def missing_phone_links(deals, entered_phones, contact_leads):
+    # Read formula input, rather than display text, to preserve formulas with
+    # an empty result as well as any analyst-entered phone number.
+    changes = []
+    for number, deal in enumerate(deals[1:], 2):
+        entered = entered_phones[number - 2] if number - 2 < len(entered_phones) else []
+        lead = deal[13] if len(deal) > 13 else ""
+        if lead in contact_leads and not (entered and entered[0] != ""):
+            changes.append({"range": f"'01 DEALS'!I{number}", "values": [[deal_phone_formula(number)]]})
+    return changes
+
 
 def fastpeople_formulas(n):
     # SEO-style person and reverse-address links documented for FastPeopleSearch.
@@ -66,7 +86,8 @@ def main():
     old=sheet.get_all_values()
     if not old or old[0][:len(HEADERS)]!=HEADERS:
         raise RuntimeError("Contact research schema mismatch, refusing write")
-    deals=book.worksheet("01 DEALS").get_all_values()
+    deals_sheet=book.worksheet("01 DEALS")
+    deals=deals_sheet.get_all_values()
     if not deals or deals[0][:len(DEAL_HEADERS)]!=DEAL_HEADERS:
         raise RuntimeError("Deals schema mismatch, refusing write")
     seen={r[13] for r in old[1:] if len(r)>13 and r[13]}
@@ -88,9 +109,13 @@ def main():
         book.values_batch_update({"valueInputOption":"USER_ENTERED","data":fixes[i:i+80]})
     if additions:
         sheet.append_rows(additions,value_input_option="USER_ENTERED",table_range="A:O")
+    entered_phones = deals_sheet.get("I2:I", value_render_option=ValueRenderOption.formula)
+    phone_links = missing_phone_links(deals, entered_phones, seen)
+    for i in range(0, len(phone_links), 80):
+        book.values_batch_update({"valueInputOption": "USER_ENTERED", "data": phone_links[i:i+80]})
     Path("output").mkdir(exist_ok=True)
     result={"deals":len(deals)-1,"refreshed_fastpeople_links":len(fixes),"new_research_rows":len(additions),
-            "automatic_messages":0}
+            "linked_blank_deal_phone_cells":len(phone_links), "automatic_messages":0}
     Path("output/contact_lookup_sync.json").write_text(json.dumps(result,indent=2))
     print(result)
 

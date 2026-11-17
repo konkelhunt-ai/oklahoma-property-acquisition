@@ -1,5 +1,5 @@
 import unittest
-from sync_contact_lookup import row_for, review_gate, field_formula, HEADERS
+from sync_contact_lookup import row_for, review_gate, field_formula, missing_phone_links, HEADERS
 
 class ContactLookupTests(unittest.TestCase):
     def test_contact_row_has_links_but_no_invented_phone(self):
@@ -20,6 +20,13 @@ class ContactLookupTests(unittest.TestCase):
         self.assertIn("REGEXREPLACE",review_gate(4))
     def test_source_lookup_by_stable_lead(self):
         self.assertIn("MATCH(N6",field_formula("C",6))
+    def test_phone_handoff_fills_only_blank_cells_for_contact_leads(self):
+        rows = [["header"]] + [[""] * 13 + [lead] for lead in ("A", "B", "C", "D")]
+        changes = missing_phone_links(rows, [[], ["=Existing()"], ["5550001234"]], {"A", "B", "C"})
+        self.assertEqual([c["range"] for c in changes], ["'01 DEALS'!I2"])
+        self.assertIn("READY FOR MANUAL REVIEW", changes[0]["values"][0][0])
+        self.assertIn("MATCH(N2", changes[0]["values"][0][0])
+
     def test_estate_discrepancy_flagged(self):
         for status in ["Estate / deceased — deed pending",
                        "Sheriff address discrepancy — research",

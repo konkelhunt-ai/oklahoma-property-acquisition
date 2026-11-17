@@ -48,6 +48,15 @@ class LeadIntakeTests(unittest.TestCase):
         self.assertEqual(changes[0]["values"], [["Not on latest sheriff list — verify"]])
         self.assertEqual(plan_sync([], rows, set(), self.today), ([], []))
 
+    def test_placeholder_reconciles_only_existing_unambiguous_case(self):
+        _, rows = plan_sync([self.record], [], set(), self.today)
+        placeholder = dict(self.record, address="See Details* Bristow")
+        self.assertEqual(plan_sync([placeholder], [], set(), self.today), ([], []))
+        self.assertEqual(plan_sync([placeholder], rows, set(), self.today), ([], []))
+        other = rows[0].copy()
+        other[2] = "2 Main St Bristow"
+        self.assertEqual(plan_sync([placeholder], [rows[0], other], set(), self.today), ([], []))
+
     def test_preserves_manual_rows(self):
         _, rows = plan_sync([self.record], [], set(), self.today)
         rows[0][7] = "https://example.com"

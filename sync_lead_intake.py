@@ -36,22 +36,38 @@ def official_source(url):
 
 
 def plan_sync(records, existing, deal_ids, today):
-    listings = defaultdict(list)
-    for record in records:
-        if record.get("county") != "Creek" or not official_source(record.get("source_url", "")):
-            continue
-        identity = listing_key(record.get("case_number"), record.get("address"))
-        day = iso_date(record.get("sale_date", ""))
-        status = str(record.get("status", "")).strip().lower()
-        if identity and day and status in {"active", "recalled", "inactive", "sold", "postponed", "cancelled", "canceled"}:
-            listings[identity].append((day, status, record))
-
     indexed = defaultdict(list)
     for number, original in enumerate(existing, 2):
         row = (original + [""] * len(HEADERS))[:len(HEADERS)]
         identity = listing_key(row[5], row[2])
         if row[1].strip().lower() == "creek" and identity:
             indexed[identity].append((number, row))
+
+    listings = defaultdict(list)
+    unresolved_cases = set()
+    for record in records:
+        if record.get("county") != "Creek" or not official_source(record.get("source_url", "")):
+            continue
+        address = record.get("address", "")
+        identity = listing_key(record.get("case_number"), address)
+        day = iso_date(record.get("sale_date", ""))
+        status = str(record.get("status", "")).strip().lower()
+        if not identity or not day or status not in {"active", "recalled", "inactive", "sold", "postponed", "cancelled", "canceled"}:
+            continue
+        if re.match(r"^(?:see details|unknown|address unavailable)\b", address, re.I):
+            # The sheriff sometimes publishes a placeholder for acreage. Match
+            # only an unambiguous already-staged case on the same sale date.
+            candidates = [
+                old_key for old_key, matches in indexed.items()
+                if old_key[0] == identity[0] and len(matches) == 1
+                and iso_date(matches[0][1][6]) == day
+                and official_source(matches[0][1][7]) and matches[0][1][9] == VERIFIED
+            ]
+            if len(candidates) != 1:
+                unresolved_cases.add(identity[0])
+                continue
+            identity = candidates[0]
+        listings[identity].append((day, status, record))
 
     updates, inserts = [], []
     checked = today.isoformat()
@@ -96,7 +112,7 @@ def plan_sync(records, existing, deal_ids, today):
     # not establish a recall, cancellation or completed sale.
     if listings:
         for identity, matches in indexed.items():
-            if identity in listings or len(matches) != 1:
+            if identity in listings or identity[0] in unresolved_cases or len(matches) != 1:
                 continue
             number, row = matches[0]
             if official_source(row[7]) and row[9] == VERIFIED and row[10] == "Active on source":
