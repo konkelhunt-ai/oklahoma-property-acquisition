@@ -1,6 +1,6 @@
 # Oklahoma Property Acquisition System
 
-Private project for monitoring upcoming Oklahoma sheriff auctions, tax resales, and foreclosure filings, prioritizing Tulsa County and surrounding counties.
+Project for monitoring upcoming Oklahoma sheriff auctions, tax resales, and foreclosure filings, prioritizing Tulsa County and surrounding counties.
 
 ## Workflow
 1. Collect permitted official county auction and court records.
@@ -11,7 +11,9 @@ Private project for monitoring upcoming Oklahoma sheriff auctions, tax resales, 
 6. Log sent messages, replies, opt-outs, and follow-up status.
 
 ## Status
-Repository initialized. Automated collectors, Google credentials, and messaging integration are **not yet deployed**.
+The daily Creek County workflow collects official sheriff sales, refreshes **00 CURRENT SALES**, and reconciles **New Lead Intake** with the existing deal IDs. Intake stages upcoming official listings and tracks changes to dates and statuses. Rows that disappear are flagged for verification. Owner research, budgets and outreach approvals are maintained in their respective sheets.
+
+Tulsa's official Excel report is inspected separately for freshness. The linked historical report does not feed current deals. Court, title, ownership and contact checks are handled in the review workflow. The XT Homes popup prepares individual drafts for manual use in Google Voice.
 
 ## Security
 Never commit passwords, Google service-account JSON, phone lists, or API tokens. Use GitHub Actions encrypted secrets. Respect source access terms, privacy, consent, and do-not-call requirements.
