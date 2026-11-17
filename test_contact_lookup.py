@@ -6,8 +6,8 @@ class ContactLookupTests(unittest.TestCase):
         row=row_for("CREEK-CJ-25-417-801SMAINST",
                     "Assessor match — deed pending",11)
         self.assertEqual(len(row),len(HEADERS))
-        self.assertIn("truepeoplesearch.com/results?name=",row[4])
-        self.assertIn("truepeoplesearch.com/results?streetaddress=",row[5])
+        self.assertIn("fastpeoplesearch.com/name/",row[4])
+        self.assertIn("fastpeoplesearch.com/address/",row[5])
         self.assertEqual(row[7],"")
         self.assertEqual(row[8],"Not reviewed")
         self.assertEqual(row[9],"Not reviewed")
