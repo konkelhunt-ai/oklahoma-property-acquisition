@@ -42,6 +42,9 @@ def choose_rows(records,deals,today,checked):
             elif old[3]=="Assessor address variant — deed pending":
                 display_owner=old[2]
                 ownership="Assessor situs variant — confirm address/deed"
+            elif old[3]=="Sheriff address discrepancy — research":
+                display_owner=old[2]
+                ownership="Unresolved sheriff address — no outreach"
         if "ownership" not in locals():
             ownership=("Court defendant — NOT deed verified"
                        if display_owner!="Owner identity needs research"
