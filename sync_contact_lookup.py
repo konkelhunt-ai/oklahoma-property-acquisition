@@ -1,4 +1,4 @@
-"""Append new deals to free contact lookup; preserve all human research.
+"""Keep FastPeopleSearch name/address links current; preserve all human research.
 
 No scraping, mass skip tracing, automated outreach or sending.
 """
@@ -29,14 +29,21 @@ def review_gate(row):
             f'LEN(REGEXREPLACE(TO_TEXT(H{row}),"[^0-9]",""))>11),'
             f'"HOLD","READY FOR MANUAL REVIEW")')
 
+def fastpeople_formulas(n):
+    # SEO-style person and reverse-address links documented for FastPeopleSearch.
+    # This navigates to the site; no personal records are scraped or assumed.
+    slug=lambda letter: f'LOWER(REGEXREPLACE(TRIM({letter}{n}),"[^A-Za-z0-9]+","-"))'
+    name=(f'=IF(OR(C{n}="",REGEXMATCH(LOWER(C{n}),'
+          f'"needs research|unknown|deceased|estate| and |&")),"",'
+          f'HYPERLINK("https://www.fastpeoplesearch.com/name/"&'
+          f'{slug("C")}&"_"&{slug("B")}&"-ok","FastPeopleSearch name"))')
+    address=(f'=IF(A{n}="","",HYPERLINK("https://www.fastpeoplesearch.com/address/"&'
+             f'{slug("A")}&"_"&{slug("B")}&"-ok","FastPeopleSearch address"))')
+    return [name,address]
+
 def row_for(lead,status,row):
     n=row
-    name=(f'=IF(OR(C{n}="",REGEXMATCH(LOWER(C{n}),'
-          f'"needs research|unknown|deceased|estate")),"",'
-          f'HYPERLINK("https://www.truepeoplesearch.com/results?name="&'
-          f'ENCODEURL(C{n})&"&citystatezip="&ENCODEURL(B{n}&", OK"),"Find person"))')
-    address=(f'=IF(A{n}="","",HYPERLINK("https://www.truepeoplesearch.com/results?streetaddress="&'
-             f'ENCODEURL(A{n})&"&citystatezip="&ENCODEURL(B{n}&", OK"),"Search address"))')
+    name,address=fastpeople_formulas(n)
     status_low=status.lower()
     note=("HOLD: sheriff defendant and assessor name differ; establish deed/title first."
           if "mismatch" in status_low else
@@ -70,10 +77,19 @@ def main():
         n=len(old)+len(additions)+1
         additions.append(row_for(r[13],r[3],n))
         seen.add(r[13])
+    # Refresh only search links (columns E:F) on existing leads; never
+    # overwrite matched person, candidate number, review notes, or decisions.
+    fixes=[]
+    for i,r in enumerate(old[1:],start=2):
+        if len(r)>13 and r[13]:
+            fixes.append({"range":f"'{TAB}'!E{i}:F{i}",
+                          "values":[fastpeople_formulas(i)]})
+    for i in range(0,len(fixes),80):
+        book.values_batch_update({"valueInputOption":"USER_ENTERED","data":fixes[i:i+80]})
     if additions:
         sheet.append_rows(additions,value_input_option="USER_ENTERED",table_range="A:O")
     Path("output").mkdir(exist_ok=True)
-    result={"deals":len(deals)-1,"new_research_rows":len(additions),
+    result={"deals":len(deals)-1,"refreshed_fastpeople_links":len(fixes),"new_research_rows":len(additions),
             "automatic_messages":0}
     Path("output/contact_lookup_sync.json").write_text(json.dumps(result,indent=2))
     print(result)
